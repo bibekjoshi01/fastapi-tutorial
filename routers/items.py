@@ -8,11 +8,6 @@ from pydantic import BaseModel
 router = APIRouter(tags=["Items"])
 
 
-@router.get("/")
-async def home():
-    return {"message": "This is homepage"}
-
-
 @router.get("/items")
 async def get_items() -> list:
     return items_db

@@ -4,9 +4,12 @@ from routers.items import router as items_router
 from routers.users import router as users_router
 from fastapi.middleware.cors import CORSMiddleware
 from starlette.requests import Request
+from fastapi.templating import Jinja2Templates
+from fastapi.responses import HTMLResponse
 
 app = FastAPI()
 
+templates = Jinja2Templates(directory="templates")
 
 @app.middleware("http")
 async def add_process_time_header(request: Request, call_next):
@@ -31,6 +34,11 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+@app.get("/", response_class=HTMLResponse)
+async def read_root(request: Request):
+    return templates.TemplateResponse("home.html", {"request": request, "name": "Bibek"})
 
 app.include_router(items_router)
 app.include_router(users_router)

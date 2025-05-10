@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Query, Path, Body
 from typing import Annotated
-from pydantic import AfterValidator, BaseModel
+from pydantic import AfterValidator, BaseModel, HttpUrl
 
 from .test_db import users_db
 
@@ -39,9 +39,15 @@ async def retrieve_user(user_id: Annotated[int, Path(title="ID of the user", gt=
     return {"error": "User not found!"}
 
 
+class Image(BaseModel):
+    url: HttpUrl
+    alt: str
+
+
 class User(BaseModel):
     name: str
     email: str
+    image: list[Image] | None = None
 
 
 @router.post("")
@@ -53,6 +59,7 @@ async def create_user(user: User):
         "name": user["name"],
         "email": user["email"],
         "is_active": True,
+        "images": user["image"]
     }
-    
+
     return {"message": "success", "data": new_user}

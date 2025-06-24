@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Secret Chat</title>
+    <style>
+      body {
+        margin: 0;
+        padding: 0;
+        font-family: 'Segoe UI', sans-serif;
+        background-color: #121212;
+        color: #e0e0e0;
+        display: flex;
+        flex-direction: column;
+        height: 100vh;
+      }
+
+      h2 {
+        text-align: center;
+        padding: 1rem;
+        margin: 0;
+        background-color: #1e1e1e;
+        border-bottom: 1px solid #333;
+      }
+
+      #chat-container {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        padding: 1rem;
+        overflow-y: auto;
+      }
+
+      #messages {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+      }
+
+      #messages li {
+        margin-bottom: 10px;
+        padding: 0.5rem 1rem;
+        border-radius: 10px;
+        max-width: 70%;
+        word-wrap: break-word;
+      }
+
+      /* Different message styles */
+      .system {
+        text-align: center;
+        color: #aaa;
+        font-style: italic;
+      }
+
+      .self {
+        background-color: #2e7d32;
+        align-self: flex-end;
+        text-align: right;
+        color: #fff;
+      }
+
+      .other {
+        background-color: #1f1f1f;
+        align-self: flex-start;
+        text-align: left;
+      }
+
+      #input-area {
+        display: flex;
+        border-top: 1px solid #333;
+        padding: 1rem;
+        background-color: #1e1e1e;
+      }
+
+      #msg {
+        flex: 1;
+        padding: 0.5rem;
+        border: none;
+        border-radius: 5px;
+        background-color: #2a2a2a;
+        color: #fff;
+      }
+
+      #msg:focus {
+        outline: none;
+      }
+
+      button {
+        margin-left: 1rem;
+        padding: 0.5rem 1rem;
+        background-color: #388e3c;
+        border: none;
+        border-radius: 5px;
+        color: #fff;
+        cursor: pointer;
+      }
+
+      button:hover {
+        background-color: #2e7d32;
+      }
+    </style>
+  </head>
+  <body>
+    <h2>Secret Chat Room: {{ chat_id }}</h2>
+
+    <div id="chat-container">
+      <ul id="messages"></ul>
+    </div>
+
+    <div id="input-area">
+      <input id="msg" placeholder="Type a secret message..." autocomplete="off" />
+      <button onclick="send()">Send</button>
+    </div>
+
+    <script>
+      const chatId = "{{ chat_id }}";
+      const ws = new WebSocket("ws://localhost:8000/ws/chat/" + chatId);
+      let assignedName = null;
+
+      ws.onmessage = (event) => {
+        const data = JSON.parse(event.data);
+        const li = document.createElement("li");
+
+        if (data.sender === "System") {
+          li.classList.add("system");
+          li.textContent = data.message;
+        } else {
+          li.classList.add(data.sender === assignedName ? "self" : "other");
+          li.innerHTML = `<strong>${data.sender}:</strong> ${data.message}`;
+        }
+
+        document.getElementById("messages").appendChild(li);
+        li.scrollIntoView({ behavior: "smooth" });
+      };
+
+      function send() {
+        const input = document.getElementById("msg");
+        if (input.value.trim() !== "") {
+          ws.send(input.value);
+          input.value = "";
+        }
+      }
+
+      // Optional: fetch your name when the first message comes in
+      ws.addEventListener("message", (event) => {
+        const data = JSON.parse(event.data);
+        if (!assignedName && data.sender !== "System") {
+          assignedName = data.sender;
+        }
+      });
+    </script>
+  </body>
+</html>
